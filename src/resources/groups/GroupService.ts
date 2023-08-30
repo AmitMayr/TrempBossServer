@@ -186,18 +186,20 @@ export async function addAdminToGroup(adminId: string, new_admin_email: string, 
     throw new BadRequestException("User not connected to the Group.");
   }
 
-  if (!group.admin_ids.includes(new ObjectId(adminId))) {
+  if (!group.admins_ids.map((id:ObjectId) => id.toString()).includes(adminId)) {    
     throw new UnauthorizedException("User not Unauthorized to add admin to this group")
   }
 
-  if (!group.admin_ids.includes(userId)) {
-    group.admin_ids.push(userId);
+  if (group.admins_ids.map((id:ObjectId) => id.toString()).includes(userId.toString())) {    
+    throw new BadRequestException("User already admin.");
   }
+  group.admins_ids.push(userId);
 
   await groupDataAccess.UpdateGroup(groupId.toString(), group);
 
   return `Successfully added ${user.email} as an admin of the group ${group.group_name}.`;
 }
+
 export async function updateGroup(groupId: string, userId: string, updateData: Partial<GroupModel>) {
   // Check if a group with the same name already exists
   if (updateData.group_name) {
