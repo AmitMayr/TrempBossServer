@@ -210,7 +210,7 @@ export async function updateGroup(groupId: string, userId: string, updateData: P
   }
 
   const group = await groupDataAccess.FindById(groupId);
-  if (!group.admins_ids.includes(new ObjectId(userId))) {
+  if (!group.admins_ids.map((id:ObjectId) => id.toString()).includes(userId)) {
     throw new UnauthorizedException("User not authorized to update the group");
   }
 
