@@ -64,7 +64,17 @@ export async function loginUser(email: string, password: string) {
   const userModel = UserModel.fromUserDocument(user);
   const isProfileComplete = userModel.isProfileComplete();
 
-  return { user, isProfileComplete };
+  // Fetch groups associated with the user
+  const groupDataAccess = new GroupDataAccess();
+  const groupIds = user.groups || [];
+
+  const userGroups = await groupDataAccess.FindAllGroups({
+    _id: { $in: groupIds },
+    deleted: false,
+    active: "active"
+  });
+
+  return { user, isProfileComplete, userGroups };
 }
 
 export async function getUserById(id: string) {
@@ -167,19 +177,19 @@ export async function getUserGroups(userId: string) {
     throw new BadRequestException("User not found");
   }
 
- 
+
   const groupDataAccess = new GroupDataAccess();
   const groupIds = user.groups || [];
 
   // Use the query to filter out the groups directly in the database
   const userGroups = await groupDataAccess.FindAllGroups({
-     _id: { $in: groupIds },
-     deleted:false,
-     active:"active"
-   },{
-    group_name:1,
-    type:1,
-    locations:1,
+    _id: { $in: groupIds },
+    deleted: false,
+    active: "active"
+  }, {
+    group_name: 1,
+    type: 1,
+    locations: 1,
 
   });
 
