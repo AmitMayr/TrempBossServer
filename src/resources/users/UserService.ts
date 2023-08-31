@@ -8,6 +8,7 @@ import { BadRequestException, UnauthorizedException } from '../../middleware/Htt
 import { MongoError } from 'mongodb';
 import crypto from 'crypto';
 import { EmailService } from '../../services/EmailService';
+import GroupDataAccess from '../groups/GroupDataAccess';
 
 const userDataAccess = new UserDataAccess();
 const saltRounds = 10;
@@ -157,4 +158,30 @@ export async function uploadImageToFirebaseAndUpdateUser(
 ) {
   const image_URL = await uploadImageToFirebase(file, filePath);
   return userDataAccess.UpdateUserDetails(userId, { image_URL });
+}
+
+
+export async function getUserGroups(userId: string) {
+  const user = await userDataAccess.FindById(userId);
+  if (!user) {
+    throw new BadRequestException("User not found");
+  }
+
+ 
+  const groupDataAccess = new GroupDataAccess();
+  const groupIds = user.groups || [];
+
+  // Use the query to filter out the groups directly in the database
+  const userGroups = await groupDataAccess.FindAllGroups({
+     _id: { $in: groupIds },
+     deleted:false,
+     active:"active"
+   },{
+    group_name:1,
+    type:1,
+    locations:1,
+
+  });
+
+  return userGroups;
 }
